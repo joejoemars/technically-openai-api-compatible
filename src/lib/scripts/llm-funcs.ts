@@ -38,6 +38,7 @@ type messageEntry = {
 	content: string;
 };
 
+// TODO: Need to add ability to see and store thinking step
 export class responseConfiguration {
 	messageList;
 	systemPrompt;
@@ -78,7 +79,7 @@ export class generation {
 	onError: Function | undefined;
 	onFinish: Function | undefined; // post-generation processing may be useful to some
 
-	stop: boolean;
+	stop: boolean; // TODO: Do something better than whatever this is
 
 	constructor(
 		generationConfiguration: generationConfiguration,
