@@ -13,6 +13,8 @@
 	let res_config: responseConfiguration | undefined = $state();
 	let generator: generation;
 
+	let currently_generating: boolean = $state(false);
+
 	import {
 		generationConfiguration,
 		responseConfiguration,
@@ -31,6 +33,7 @@
 		checkConf();
 
 		generating_message = ' ';
+		currently_generating = true;
 
 		generator.run(user_message);
 	}
@@ -68,6 +71,7 @@
 
 		generator.onFinish = () => {
 			generating_message = '';
+			currently_generating = false;
 		};
 	}
 
@@ -79,7 +83,7 @@
 	}
 
 	function stopGeneration() {
-		generator.stop = true;
+		generator.stop();
 	}
 </script>
 
@@ -150,9 +154,9 @@
 				><em>why not auto save?</em></sup
 			>
 			<br />
-			<input type="submit" value="Send Message" />
-			<br />
-			{#if generating_message != ''}
+			<input type="submit" value="Send Message" disabled={currently_generating} />
+			{#if currently_generating}
+				<br />
 				<input type="button" value="Stop Generation" onclick={stopGeneration} />
 			{/if}
 		</fieldset>
@@ -169,7 +173,7 @@
 					{@html marked.parse(content, { async: false })}
 				</fieldset>
 				<br />
-				{#if generating_message == ''}
+				{#if !currently_generating}
 					<input type="button" value="Delete Message" onclick={() => deleteMessage(index)} />
 				{/if}
 			</fieldset>
@@ -180,7 +184,7 @@
 		{#each res_config?.messageList as msg, index}
 			{@render message(msg.role, msg.content, index)}
 		{/each}
-		{#if generating_message != ''}
+		{#if currently_generating}
 			<!-- <p>STREAMED RESPONSE BELOW:</p> -->
 			{@render message('assistant', generating_message, -1)}
 		{/if}

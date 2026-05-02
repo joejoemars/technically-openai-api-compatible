@@ -79,7 +79,7 @@ export class generation {
 	onError: Function | undefined;
 	onFinish: Function | undefined; // post-generation processing may be useful to some
 
-	stop: boolean; // TODO: Do something better than whatever this is
+	#signalController: AbortController | undefined;
 
 	constructor(
 		generationConfiguration: generationConfiguration,
@@ -87,8 +87,6 @@ export class generation {
 	) {
 		this.generationConfiguration = generationConfiguration;
 		this.responseConfiguration = responseConfiguration;
-
-		this.stop = false;
 	}
 
 	/*
@@ -109,11 +107,9 @@ export class generation {
 	If your onReceive or onParse cause an error, it will be fatal and cause the response to be aborted.
 	*/
 	async run(message: string): Promise<void> {
-		this.stop = false;
-
 		// Vars we need access to incase of an error need to be declared outside of try-catch
 		let receivedText = '';
-		const signalController = new AbortController();
+		this.#signalController = new AbortController();
 
 		try {
 			// Add user's message
@@ -131,7 +127,7 @@ export class generation {
 				method: 'POST',
 				headers: headers,
 				body: body,
-				signal: signalController.signal
+				signal: this.#signalController.signal
 			});
 
 			// Check response status just in case
@@ -158,12 +154,6 @@ export class generation {
 			const textDecoder = new TextDecoder();
 			// Chunk parsing loop
 			while (true) {
-				if (this.stop) {
-					signalController.abort();
-					console.log('Response stopped manually. Cleaning up...');
-					break;
-				}
-
 				const { done, value } = await responseReader.read();
 				if (done) {
 					console.log('Response finished. Cleaning up...');
@@ -183,11 +173,13 @@ export class generation {
 				});
 			}
 		} catch (err) {
-			signalController.abort();
+			if (err != 'early-cancel') {
+				this.#signalController.abort();
 
-			if (this.onError) this.onError(err);
+				if (this.onError) this.onError(err);
 
-			console.error('Error while calling provider! Error shown below: ', err);
+				console.error('Error while calling provider! Error shown below: ', err);
+			}
 		} finally {
 			// Final call and saving of response
 			this.responseConfiguration.append({
@@ -199,6 +191,11 @@ export class generation {
 		}
 
 		console.log('Generation finished.');
+	}
+
+	stop() {
+		console.log('Response stopped manually. Cleaning up...');
+		this.#signalController?.abort('early-cancel');
 	}
 
 	#parse_chunk(chunk: string): string {
