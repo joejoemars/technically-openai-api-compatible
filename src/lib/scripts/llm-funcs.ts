@@ -106,6 +106,8 @@ export class generation {
 	There is no special error handling. If a response fails, it will not retry or anything else.
 	If your onReceive or onParse cause an error, it will be fatal and cause the response to be aborted.
 	*/
+
+	// TODO: check and disallow for run to be called multiple times during a generation
 	async run(message: string): Promise<void> {
 		// Vars we need access to incase of an error need to be declared outside of try-catch
 		let receivedText = '';
