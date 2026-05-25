@@ -202,7 +202,7 @@ export class generation {
 
 	#parse_chunk(chunk: string): string {
 		// Remove excess whitespace that may remain
-		chunk.trim();
+		chunk = chunk.trim();
 
 		// Chunk may be the very last chunk possible, check for that
 		if (chunk && chunk != 'data: [DONE]') {
@@ -210,17 +210,22 @@ export class generation {
 
 			// Check if no text was generated, if this is a stop chunk, or if content is empty before appending
 			// UNPLANNED: Support for taking in multiple responses at once
-			if (
-				data.choices.length != 0 &&
-				data.choices[0].finish_reason != 'stop' &&
-				data.choices[0].delta.content
-			) {
+			if (data.choices && data.choices.length != 0 && data.choices[0].delta.content) {
 				// Pass to onParse if defined
 				if (this.onParse)
 					data.choices[0].delta.content =
 						this.onParse(data.choices[0].delta.content) || data.choices[0].delta.content;
 
 				return data.choices[0].delta.content;
+			} else if (data.error) {
+				console.error(
+					'Encountered a provider error (' +
+						data.error.type +
+						')! Message attached: "' +
+						data.error.message +
+						'"',
+					data.error
+				);
 			}
 		}
 
