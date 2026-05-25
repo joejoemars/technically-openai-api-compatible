@@ -29,13 +29,17 @@
 	}
 
 	let generating_message: string = $state('');
-	function sendMessage() {
+	function sendMessage(event: MouseEvent) {
 		checkConf();
 
 		generating_message = ' ';
 		currently_generating = true;
 
-		generator.run(user_message);
+		if (!event.shiftKey) {
+			generator.run(user_message);
+		} else {
+			generator.run('');
+		}
 	}
 
 	function saveConfiguration() {
@@ -55,7 +59,7 @@
 			model_name,
 			model_temperature,
 			-1,
-			10000,
+			5000,
 			stream_output
 		);
 
@@ -72,6 +76,10 @@
 		generator.onFinish = () => {
 			generating_message = '';
 			currently_generating = false;
+
+			if (res_config?.messageList[res_config?.messageList.length - 1].content.trim() == '') {
+				res_config.remove(res_config?.messageList.length - 1);
+			}
 		};
 	}
 
@@ -102,7 +110,7 @@
 	<br />
 	<br />
 
-	<form onsubmit={sendMessage}>
+	<form>
 		<fieldset id="configuration">
 			<legend>Configuration</legend>
 
@@ -154,7 +162,12 @@
 				><em>why not auto save?</em></sup
 			>
 			<br />
-			<input type="submit" value="Send Message" disabled={currently_generating} />
+			<input
+				type="submit"
+				value="Send Message"
+				disabled={currently_generating}
+				onclick={sendMessage}
+			/>
 			{#if currently_generating}
 				<br />
 				<input type="button" value="Stop Generation" onclick={stopGeneration} />
