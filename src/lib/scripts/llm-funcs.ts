@@ -115,10 +115,13 @@ export class generation {
 
 		try {
 			// Add user's message
-			this.responseConfiguration.append({
-				role: 'user',
-				content: message
-			});
+
+			if (message != '') {
+				this.responseConfiguration.append({
+					role: 'user',
+					content: message
+				});
+			}
 
 			// Create the body and headers for the fetsh
 			const body = this.#assemble_request_body();
