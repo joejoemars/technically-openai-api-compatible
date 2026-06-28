@@ -19,7 +19,7 @@ RUN pnpm run build
 # Prune devDependencies to keep the production image tiny
 RUN pnpm prune --prod
 
-FROM node:20-alpine
+FROM node:22-alpine
 WORKDIR /app
 
 # Copy the build output and pruned node_modules from the builder stage
